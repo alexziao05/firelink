@@ -24,9 +24,9 @@ def get_risk_grid(
     """
     if min_lat >= max_lat or min_lon >= max_lon:
         raise HTTPException(status_code=400, detail="Invalid bounding box")
-    
+
     risk_cells = RiskEngine.compute_risk_grid(db, min_lat, max_lat, min_lon, max_lon)
-    
+
     return [
         RiskCell(latitude=lat, longitude=lon, risk_score=risk)
         for lat, lon, risk in risk_cells

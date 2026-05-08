@@ -16,12 +16,12 @@ def get_fire_layer(db: Session = Depends(get_db)):
     Get all active fire reports as a GeoJSON feature collection.
     """
     from ..models import Report, ReportType
-    
+
     fire_reports = db.query(Report).filter(
         Report.report_type == ReportType.FIRE_SEEN,
         Report.is_resolved == 0
     ).all()
-    
+
     features = [
         {
             "type": "Feature",
@@ -38,7 +38,7 @@ def get_fire_layer(db: Session = Depends(get_db)):
         }
         for report in fire_reports
     ]
-    
+
     return {
         "type": "FeatureCollection",
         "features": features

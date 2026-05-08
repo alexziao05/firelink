@@ -34,10 +34,10 @@ def get_reports(
 ):
     """Get all reports, optionally filtered by type."""
     query = db.query(Report)
-    
+
     if report_type:
         query = query.filter(Report.report_type == report_type)
-    
+
     reports = query.offset(skip).limit(limit).all()
     return reports
 
@@ -62,13 +62,13 @@ def update_report(
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    
+
     if is_resolved is not None:
         report.is_resolved = 1 if is_resolved else 0
-    
+
     if note is not None:
         report.note = note
-    
+
     db.commit()
     db.refresh(report)
     return report

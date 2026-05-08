@@ -13,7 +13,7 @@ import json
 
 class RoutingEngine:
     """Computes safest evacuation routes to shelters."""
-    
+
     @staticmethod
     def find_nearest_shelter(
         db: Session,
@@ -22,13 +22,13 @@ class RoutingEngine:
     ) -> Shelter:
         """Find the nearest shelter to a given location."""
         shelters = db.query(Shelter).all()
-        
+
         if not shelters:
             raise ValueError("No shelters available")
-        
+
         nearest_shelter = None
         min_distance = float('inf')
-        
+
         for shelter in shelters:
             distance = RiskEngine.haversine_distance(
                 latitude, longitude,
@@ -37,9 +37,9 @@ class RoutingEngine:
             if distance < min_distance:
                 min_distance = distance
                 nearest_shelter = shelter
-        
+
         return nearest_shelter
-    
+
     @staticmethod
     def compute_route_risk(
         db: Session,
@@ -55,25 +55,25 @@ class RoutingEngine:
         """
         explanations = []
         total_risk = 0.0
-        
+
         # Sample points along the route
         for i in range(samples + 1):
             t = i / samples
             sample_lat = start_lat + (end_lat - start_lat) * t
             sample_lon = start_lon + (end_lon - start_lon) * t
-            
+
             location_risk = RiskEngine.compute_risk_at_location(db, sample_lat, sample_lon)
             total_risk += location_risk
-        
+
         average_risk = total_risk / (samples + 1)
-        
+
         # Generate explanations based on hazards
         reports = db.query(Report).filter(Report.is_resolved == 0).all()
-        
+
         fire_count = 0
         blocked_road_count = 0
         smoke_count = 0
-        
+
         for report in reports:
             # Check if report is near the route
             dist_to_start = RiskEngine.haversine_distance(
@@ -84,26 +84,26 @@ class RoutingEngine:
                 report.latitude, report.longitude,
                 end_lat, end_lon
             )
-            
+
             if report.report_type == ReportType.FIRE_SEEN and dist_to_start < 5 and dist_to_end < 5:
                 fire_count += 1
             elif report.report_type == ReportType.BLOCKED_ROAD and dist_to_start < 3 and dist_to_end < 3:
                 blocked_road_count += 1
             elif report.report_type == ReportType.HEAVY_SMOKE and dist_to_start < 4 and dist_to_end < 4:
                 smoke_count += 1
-        
+
         if fire_count > 0:
             explanations.append(f"Avoiding {fire_count} fire report(s)")
         if blocked_road_count > 0:
             explanations.append(f"Rerouted away from {blocked_road_count} blocked road(s)")
         if smoke_count > 0:
             explanations.append(f"Minimizing exposure to {smoke_count} smoke report(s)")
-        
+
         if not explanations:
             explanations.append("Clear route detected")
-        
+
         return min(average_risk, 1.0), explanations
-    
+
     @staticmethod
     def compute_route(
         db: Session,
@@ -122,13 +122,13 @@ class RoutingEngine:
                 raise ValueError(f"Shelter {shelter_id} not found")
         else:
             shelter = RoutingEngine.find_nearest_shelter(db, start_lat, start_lon)
-        
+
         # Compute route risk and explanations
         risk_score, explanation = RoutingEngine.compute_route_risk(
             db, start_lat, start_lon,
             shelter.latitude, shelter.longitude
         )
-        
+
         # Create mock GeoJSON LineString route
         route_geojson = {
             "type": "LineString",
@@ -137,7 +137,7 @@ class RoutingEngine:
                 [shelter.longitude, shelter.latitude]
             ]
         }
-        
+
         return RouteResponse(
             route_geojson=route_geojson,
             risk_score=risk_score,
