@@ -7,6 +7,9 @@ import MapView from "./components/MapView";
 import ReportForm from "./components/ReportForm";
 import RoutePanel from "./components/RoutePanel";
 import RiskLegend from "./components/RiskLegend";
+import BottomReportButton from "./components/BottomReportButton";
+import ReportSheet from "./components/ReportSheet";
+import RouteSheet from "./components/RouteSheet";
 import { client } from "./api/client";
 import {
   Report,
@@ -36,6 +39,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [apiHealth, setApiHealth] = useState(false);
+  const [reportSheetOpen, setReportSheetOpen] = useState(false);
+  const [routeSheetOpen, setRouteSheetOpen] = useState(false);
 
   // Initialize app: check API health and load data
   useEffect(() => {
@@ -202,76 +207,44 @@ const App: React.FC = () => {
 
       {/* Main content */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden", gap: "16px", padding: "16px" }}>
-        {/* Map section (left) */}
-        <div style={{ flex: 2, minWidth: 0, borderRadius: "8px", overflow: "hidden" }}>
+        {/* Map takes full primary space now */}
+        <div style={{ flex: 1, minWidth: 0, borderRadius: "8px", overflow: "hidden" }}>
           <MapView
             reports={reports}
             shelters={shelters}
             riskCells={riskCells}
             selectedLocation={selectedLocation}
             route={route}
-            onLocationSelect={handleLocationSelect}
-          />
-        </div>
-
-        {/* Sidebar section (right) */}
-        <div
-          style={{
-            flex: 1,
-            minWidth: "300px",
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-          }}
-        >
-          {/* Report Form */}
-          <ReportForm
-            selectedLocation={selectedLocation}
-            onSubmit={handleReportSubmit}
-            isLoading={isLoading}
-          />
-
-          {/* Route Panel */}
-          <RoutePanel
-            selectedLocation={selectedLocation}
-            shelters={shelters}
-            onRouteRequest={handleRouteRequest}
-            route={route}
-            isLoading={isLoading}
-          />
-
-          {/* Risk Legend */}
-          <RiskLegend />
-
-          {/* Stats */}
-          <div
-            style={{
-              padding: "12px",
-              backgroundColor: "#fff",
-              borderRadius: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              fontSize: "12px",
+            onLocationSelect={(lat, lng) => {
+              handleLocationSelect(lat, lng);
+              // open route sheet when a location is selected
+              setRouteSheetOpen(true);
             }}
-          >
-            <h4 style={{ margin: "0 0 8px 0" }}>Active Reports</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-              <div>
-                <div style={{ color: "#999", fontSize: "10px" }}>Total</div>
-                <div style={{ fontSize: "18px", fontWeight: "bold" }}>
-                  {reports.length}
-                </div>
-              </div>
-              <div>
-                <div style={{ color: "#999", fontSize: "10px" }}>Shelters</div>
-                <div style={{ fontSize: "18px", fontWeight: "bold" }}>
-                  {shelters.length}
-                </div>
-              </div>
-            </div>
-          </div>
+          />
         </div>
       </div>
+
+      {/* Floating bottom report button and sheets */}
+      <BottomReportButton onOpen={() => setReportSheetOpen(true)} />
+
+      <ReportSheet
+        isOpen={reportSheetOpen}
+        onClose={() => setReportSheetOpen(false)}
+        selectedLocation={selectedLocation}
+        setSelectedLocation={setSelectedLocation}
+        onSubmit={handleReportSubmit}
+        isLoading={isLoading}
+      />
+
+      <RouteSheet
+        isOpen={routeSheetOpen}
+        onClose={() => setRouteSheetOpen(false)}
+        selectedLocation={selectedLocation}
+        shelters={shelters}
+        onRouteRequest={handleRouteRequest}
+        route={route}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

@@ -48,3 +48,56 @@ code {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Bottom report button */
+.bottom-report-button {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 18px;
+  z-index: 1000;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 28px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Bottom sheet backdrop and sheet */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1500;
+}
+
+.bottom-sheet {
+  width: 100%;
+  max-width: 720px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  background: #fff;
+  box-shadow: 0 -6px 20px rgba(0,0,0,0.12);
+  margin: 0 12px 12px 12px;
+}
+
+@media (min-width: 900px) {
+  .bottom-report-button {
+    right: 24px;
+    left: auto;
+    transform: none;
+  }
+  .bottom-sheet {
+    width: 420px;
+    max-width: 420px;
+    margin-right: 24px;
+    margin-left: 0;
+    align-self: center;
+  }
+}
