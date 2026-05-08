@@ -5,9 +5,7 @@ Main FastAPI application entry point.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import init_db, SessionLocal
-from .services.data_loader import seed_database
-from .routers import reports, routing, risk, layers
+from .core.database import init_db
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -19,31 +17,18 @@ app = FastAPI(
 # Configure CORS for local frontend development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Include routers
-app.include_router(reports.router)
-app.include_router(routing.router)
-app.include_router(risk.router)
-app.include_router(layers.router)
-
 
 @app.on_event("startup")
 def startup():
     """Initialize database and seed with data on startup."""
     init_db()
-    db = SessionLocal()
-
-    # Check if database already has data; seed only on first run
-    from .models import Shelter
-    if db.query(Shelter).count() == 0:
-        seed_database(db)
-
-    db.close()
 
 
 @app.get("/health")
