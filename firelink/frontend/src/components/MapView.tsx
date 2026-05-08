@@ -44,8 +44,8 @@ const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
-    // Default center: San Jose area
-    const map = L.map(mapRef.current).setView([37.5, -122.0], 11);
+    // Default center: San Diego area
+    const map = L.map(mapRef.current).setView([32.7157, -117.1611], 11);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
