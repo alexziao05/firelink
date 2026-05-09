@@ -3,9 +3,3 @@ uvicorn==0.24.0
 sqlalchemy==2.0.49
 pydantic==2.11.5
 python-multipart==0.0.6
-<<<<<<< HEAD
-=======
-aiokafka==0.10.0
-playwright>=1.40.0
-python-dotenv>=1.0.0
->>>>>>> d3ef0239d938661ba48b5b203dcd36bbcae3d6e5
