@@ -1,34 +1,43 @@
-# FireLink - Wildfire Evacuation Intelligence Platform
-
-**24-Hour Hackathon MVP**
-
-FireLink is a real-time wildfire evacuation intelligence platform that helps communities respond to emergencies by providing:
-
-- **Incident Reporting**: Real-time reports of fires, blocked roads, smoke, and assistance needs
-- **Risk Scoring**: Dynamic evacuation risk assessment based on hazard proximity
-- **Smart Routing**: Safest evacuation routes to designated shelters
-- **Interactive Visualization**: Real-time map with hazard layers and evacuation routes
-
 # FireLink — Backend Only
 
-This folder contains the backend for FireLink. The frontend has been removed and is maintained in a separate repository.
+This repository now contains the backend for FireLink (FastAPI). The frontend has been moved to a separate repository and is no longer part of this codebase.
+
+Quick overview:
+
+- Backend: Python + FastAPI + SQLite
+- API Docs: http://localhost:8000/docs (when running locally)
+
+If you need the frontend, check your organization's frontend repository or ask the team for the new repo URL.
 
 ## Quick Start (Backend)
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-API docs: http://localhost:8000/docs
+Backend will be available at: http://localhost:8000 and API docs at http://localhost:8000/docs
 
-## Project highlights
+## Project Structure
 
-- FastAPI app located at `backend/app`
-- Seed data in `backend/seed`
-- Requirements in `backend/requirements.txt`
+```
+backend/
+├── README.md            # Backend setup & API docs
+├── requirements.txt     # Python dependencies
+└── app/                 # FastAPI application
+    ├── main.py
+    ├── models.py
+    ├── schemas.py
+    ├── database.py
+    ├── routers/
+    └── services/
+```
 
-If you need the frontend, check your organization's frontend repository or ask the team for the new repo URL.
+## Support
+
+For backend setup or API questions, see `backend/README.md`.
+
+---
