@@ -13,6 +13,7 @@ RETRY_DELAY = 5
 class BaseProducer:
     topic: str
     interval: int
+    model_class = None
 
     async def fetch(self) -> list[dict]:
         raise NotImplementedError
@@ -26,11 +27,26 @@ class BaseProducer:
                     for record in records:
                         await producer.send(self.topic, json.dumps(record).encode())
                         logger.info(f"{self.__class__.__name__} → {self.topic}: {json.dumps(record)}")
+                        await asyncio.to_thread(self._save_to_db, record)
                 except Exception as e:
                     logger.error(f"{self.__class__.__name__} fetch error: {e}")
                 await asyncio.sleep(self.interval)
         finally:
             await producer.stop()
+
+    def _save_to_db(self, record: dict):
+        if self.model_class is None:
+            return
+        from app.core.database import SessionLocal
+        db = SessionLocal()
+        try:
+            db.merge(self.model_class(**record))
+            db.commit()
+        except Exception as e:
+            logger.error(f"{self.__class__.__name__} DB save error: {e}")
+            db.rollback()
+        finally:
+            db.close()
 
     async def _connect(self) -> AIOKafkaProducer:
         while True:

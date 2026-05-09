@@ -1,6 +1,7 @@
 import json
 import os
 from .base_producer import BaseProducer
+from app.models import WeatherAlert
 
 DATA_FILE = os.path.join(os.path.dirname(__file__), "../../data/weather_alerts.json")
 
@@ -8,6 +9,7 @@ DATA_FILE = os.path.join(os.path.dirname(__file__), "../../data/weather_alerts.j
 class NoaaProducer(BaseProducer):
     topic = "firelink.weather"
     interval = 10
+    model_class = WeatherAlert
 
     def __init__(self):
         with open(DATA_FILE) as f:

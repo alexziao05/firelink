@@ -1,6 +1,7 @@
 import json
 import os
 from .base_producer import BaseProducer
+from app.models import FireIncident
 
 DATA_FILE = os.path.join(os.path.dirname(__file__), "../../data/fire_incidents.json")
 
@@ -8,6 +9,7 @@ DATA_FILE = os.path.join(os.path.dirname(__file__), "../../data/fire_incidents.j
 class CalFireProducer(BaseProducer):
     topic = "firelink.fire"
     interval = 10
+    model_class = FireIncident
 
     def __init__(self):
         with open(DATA_FILE) as f:
