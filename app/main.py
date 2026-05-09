@@ -1,20 +1,20 @@
-"""
-FireLink Backend - Wildfire Evacuation Intelligence Platform
-
-Main FastAPI application entry point.
-"""
+import asyncio
+import logging
 from fastapi import FastAPI
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 from fastapi.middleware.cors import CORSMiddleware
 from .core.database import init_db
+from .routes.context import router as context_router
+from .services.producers.noaa_producer import NoaaProducer
+from .services.producers.calfire_producer import CalFireProducer
 
-# Initialize FastAPI app
 app = FastAPI(
     title="FireLink API",
     description="Wildfire evacuation intelligence platform",
     version="0.1.0"
 )
 
-# Configure CORS for local frontend development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -23,21 +23,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+app.include_router(context_router)
+
 
 @app.on_event("startup")
-def startup():
-    """Initialize database and seed with data on startup."""
+async def startup():
     init_db()
+    asyncio.create_task(NoaaProducer().run())
+    asyncio.create_task(CalFireProducer().run())
 
 
 @app.get("/health")
 def health_check():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": "FireLink API"
-    }
+    return {"status": "healthy", "service": "FireLink API"}
 
 
 if __name__ == "__main__":
