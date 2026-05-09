@@ -1,7 +1,7 @@
 """
 rag_query.py
 ------------
-Called every time a user sends an SMS to EmberLink.
+Called every time a user sends an SMS to FireLink.
 Takes the user's phone number + message, retrieves relevant fire
 knowledge from Pinecone, injects their profile from mock_users.json,
 and returns a Claude-generated SMS response.
@@ -9,7 +9,7 @@ and returns a Claude-generated SMS response.
 Usage (standalone test):
     python rag_query.py
 
-Designed to be imported by your Twilio SMS webhook:
+Designed to be imported by your Twilio SMS webhook (future item)
     from rag_query import query_agent
     response = query_agent(phone_number="+16195550001", user_message="There's smoke outside")
 

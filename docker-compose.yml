@@ -4,12 +4,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: firelink-backend
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
       - ./app:/app/app
+      - ./docs:/app/docs
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - firelink-network
