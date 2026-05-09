@@ -37,7 +37,6 @@ TOP_K            = 5
 # parents[3] climbs to repo root (knowledge → services → app → root).
 PROJECT_ROOT     = Path(__file__).resolve().parents[3]
 MOCK_USERS_PATH  = PROJECT_ROOT / "app" / "data" / "mock_users.json"
-TEST_CASES_PATH  = PROJECT_ROOT / "app" / "data" / "rag_test_cases.json"
 
 
 def load_mock_users() -> dict:
@@ -154,27 +153,3 @@ def query_agent(phone_number: str, user_message: str) -> str:
     chunks = retrieve_chunks(user_message)
     prompt = build_prompt(user_profile_str, chunks, user_message)
     return call_claude(prompt)
-
-
-def load_test_cases() -> list[dict]:
-    if not TEST_CASES_PATH.exists():
-        raise FileNotFoundError(
-            f"rag_test_cases.json not found at {TEST_CASES_PATH}."
-        )
-    with open(TEST_CASES_PATH, "r") as f:
-        return json.load(f)
-
-
-if __name__ == "__main__":
-    test_cases = load_test_cases()
-
-    for test in test_cases:
-        print(f"\n{'='*50}")
-        print(f"Phone:   {test['phone']}")
-        print(f"Message: {test['message']}")
-        print(f"{'='*50}")
-        response = query_agent(
-            phone_number=test["phone"],
-            user_message=test["message"],
-        )
-        print(f"EmberLink: {response}")

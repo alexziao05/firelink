@@ -10,7 +10,7 @@ from .routes.context import router as context_router
 from .routes.fire_incidents import router as fire_incidents_router
 from .routes.weather_alerts import router as weather_alerts_router
 from .routes.agents.recommendation import router as recommendation_router
-from .routes.knowledge import router as knowledge_router
+from .routes.sms import router as sms_router
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -42,7 +42,7 @@ app.include_router(context_router)
 app.include_router(fire_incidents_router)
 app.include_router(weather_alerts_router)
 app.include_router(recommendation_router)
-app.include_router(knowledge_router)
+app.include_router(sms_router)
 
 
 @app.get("/health")
