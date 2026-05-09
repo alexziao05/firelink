@@ -37,7 +37,6 @@ TOP_K            = 5 # for RAG retrieval
 # parents[3] climbs to repo root (knowledge → services → app → root).
 PROJECT_ROOT     = Path(__file__).resolve().parents[3]
 MOCK_USERS_PATH  = PROJECT_ROOT / "app" / "data" / "mock_users.json"
-TEST_CASES_PATH  = PROJECT_ROOT / "app" / "data" / "rag_test_cases.json"
 
 
 def load_mock_users() -> dict:

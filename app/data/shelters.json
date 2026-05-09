@@ -1,0 +1,57 @@
+[
+  {
+    "id": "shelter-pasadena-civic",
+    "name": "Pasadena Civic Auditorium",
+    "address": "300 E Green St, Pasadena, CA 91101",
+    "latitude": 34.1444,
+    "longitude": -118.1471,
+    "capacity": 1500,
+    "has_pet_area": true,
+    "accessible": true,
+    "open": true
+  },
+  {
+    "id": "shelter-glendale-pacific",
+    "name": "Pacific Community Center",
+    "address": "501 S Pacific Ave, Glendale, CA 91204",
+    "latitude": 34.1391,
+    "longitude": -118.2622,
+    "capacity": 600,
+    "has_pet_area": false,
+    "accessible": true,
+    "open": true
+  },
+  {
+    "id": "shelter-burbank-ymca",
+    "name": "Burbank Community YMCA",
+    "address": "321 E Magnolia Blvd, Burbank, CA 91502",
+    "latitude": 34.1816,
+    "longitude": -118.3072,
+    "capacity": 400,
+    "has_pet_area": true,
+    "accessible": true,
+    "open": true
+  },
+  {
+    "id": "shelter-eagle-rock-rec",
+    "name": "Eagle Rock Recreation Center",
+    "address": "1100 Eagle Vista Dr, Los Angeles, CA 90041",
+    "latitude": 34.1392,
+    "longitude": -118.2069,
+    "capacity": 350,
+    "has_pet_area": false,
+    "accessible": true,
+    "open": true
+  },
+  {
+    "id": "shelter-arcadia-park",
+    "name": "Arcadia County Park Activity Center",
+    "address": "405 S Santa Anita Ave, Arcadia, CA 91006",
+    "latitude": 34.1311,
+    "longitude": -118.0353,
+    "capacity": 500,
+    "has_pet_area": true,
+    "accessible": true,
+    "open": false
+  }
+]

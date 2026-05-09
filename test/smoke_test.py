@@ -157,24 +157,24 @@ def check_context() -> None:
             raise RuntimeError(f"missing key '{key}' in context payload")
 
 
-# ── RAG checks (loud failure when keys are missing)
-RAG_KEYS = ("OPENAI_API_KEY", "PINECONE_API_KEY", "ANTHROPIC_API_KEY")
+# ── Help-Agent SMS checks (loud failure when keys are missing)
+HELP_AGENT_KEYS = ("OPENAI_API_KEY", "PINECONE_API_KEY", "ANTHROPIC_API_KEY")
 
 
-def check_rag_keys() -> None:
-    missing = [k for k in RAG_KEYS if not os.getenv(k)]
+def check_help_agent_keys() -> None:
+    missing = [k for k in HELP_AGENT_KEYS if not os.getenv(k)]
     if missing:
-        raise RuntimeError(f"required RAG env vars missing: {missing}")
+        raise RuntimeError(f"required Help-Agent env vars missing: {missing}")
 
 
-def check_rag_endpoint() -> None:
-    fixture = REPO_ROOT / "app" / "data" / "rag_test_cases.json"
+def check_sms_endpoint() -> None:
+    fixture = REPO_ROOT / "app" / "data" / "sms_test_cases.json"
     cases = json.loads(fixture.read_text())
     if not cases:
         raise RuntimeError(f"no test cases in {fixture}")
     case = cases[0]
     body = http_post(
-        "/knowledge/query",
+        "/sms/inbound",
         {"phone": case["phone"], "message": case["message"]},
     )
     data = json.loads(body)
@@ -202,9 +202,9 @@ def main() -> int:
     run_check("GET /weather-alerts", check_weather_alerts)
     run_check("GET /context/latest", check_context)
 
-    print("RAG pipeline (Pinecone + OpenAI + Anthropic)")
-    run_check("RAG API keys present in env", check_rag_keys)
-    run_check("POST /knowledge/query returns non-empty reply", check_rag_endpoint)
+    print("Help Agent / SMS pipeline (Pinecone + OpenAI + Anthropic)")
+    run_check("Help-Agent API keys present in env", check_help_agent_keys)
+    run_check("POST /sms/inbound returns non-empty reply", check_sms_endpoint)
 
     print("=" * 50)
     passed = sum(1 for _, ok, _ in results if ok)

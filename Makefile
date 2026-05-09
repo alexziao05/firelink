@@ -4,7 +4,7 @@ COMPOSE := docker compose -f $(COMPOSE_FILE)
 .PHONY: help check up up-build down clean logs ps health \
         logs-calfire logs-noaa logs-all logs-mcp logs-recommendation \
         stream-fire stream-weather stream-recommendations \
-        context topics mcp-server ingest rag-test test
+        context topics mcp-server ingest sms sms-replay test
 
 help:
 	@echo "Available targets:"
@@ -30,8 +30,9 @@ help:
 	@echo "  make stream-recommendations Live Kafka stream: firelink.recommendations"
 	@echo "  make mcp-server          Run FastMCP context server locally (stdio transport)"
 	@echo "  make ingest              One-shot ingest of docs/*.pdf into Pinecone"
-	@echo "  make rag-test            Replay rag_test_cases.json against the RAG pipeline"
-	@echo "  make test                Smoke-test running stack (make + REST + RAG)"
+	@echo "  make sms                 Interactive SMS simulator (talks to /sms/inbound)"
+	@echo "  make sms-replay          Batch-replay sms_test_cases.json through the Help Agent"
+	@echo "  make test                Smoke-test running stack (make + REST + Help Agent)"
 
 check:
 	@command -v docker >/dev/null 2>&1 || { echo "Docker is not installed or not on PATH."; exit 1; }
@@ -107,8 +108,11 @@ mcp-server:
 ingest:
 	$(COMPOSE) exec backend python -m app.services.knowledge.ingest
 
-rag-test:
-	$(COMPOSE) exec backend python -m app.services.knowledge.rag_query
+sms:
+	@python3 test/sms_cli.py
+
+sms-replay:
+	@python3 test/sms_cli.py --batch
 
 test:
 	@python3 test/smoke_test.py
