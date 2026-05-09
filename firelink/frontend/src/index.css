@@ -61,7 +61,7 @@ code {
   border: none;
   padding: 12px 20px;
   border-radius: 28px;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   font-weight: bold;
 }
