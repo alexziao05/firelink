@@ -28,7 +28,10 @@ export async function apiGet<T>(
   const revalidate = opts.revalidate ?? DEFAULT_REVALIDATE_S;
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method: "GET",
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      "ngrok-skip-browser-warning": "true",
+    },
     next: { revalidate },
     signal: opts.signal,
   });
@@ -48,6 +51,7 @@ export async function apiPost<TOut, TIn = unknown>(
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      "ngrok-skip-browser-warning": "true",
     },
     body: JSON.stringify(body),
     cache: "no-store",

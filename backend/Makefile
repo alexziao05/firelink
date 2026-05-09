@@ -1,13 +1,15 @@
 COMPOSE_FILE := docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
 FRONTEND_DIR := ../frontend
-NPM := npm --prefix $(FRONTEND_DIR)
+# nvm-managed node is not on make's restricted PATH; resolve npm explicitly.
+NPM_BIN ?= /Users/alexhuang/.nvm/versions/node/v24.15.0/bin/npm
+NPM := $(NPM_BIN) --prefix $(FRONTEND_DIR)
 
 .PHONY: help check up up-build down clean logs ps health \
         logs-calfire logs-noaa logs-all logs-mcp logs-recommendation \
         stream-fire stream-weather stream-recommendations \
         context topics mcp-server ingest sms sms-replay test \
-        frontend-install frontend-dev frontend-build frontend-start frontend-lint dev-all
+        frontend-install frontend-dev frontend-build frontend-start frontend-lint
 
 help:
 	@echo "Available targets:"
@@ -42,7 +44,6 @@ help:
 	@echo "  make frontend-build      Production build of the Next.js app"
 	@echo "  make frontend-start      Run the production Next.js server"
 	@echo "  make frontend-lint       Run eslint on the frontend"
-	@echo "  make dev-all             Start backend stack + frontend dev server"
 
 check:
 	@command -v docker >/dev/null 2>&1 || { echo "Docker is not installed or not on PATH."; exit 1; }
@@ -143,8 +144,3 @@ frontend-start:
 
 frontend-lint:
 	$(NPM) run lint
-
-dev-all:
-	@echo "Starting backend stack (detached) + frontend dev server…"
-	$(COMPOSE) up -d
-	@$(MAKE) frontend-dev
