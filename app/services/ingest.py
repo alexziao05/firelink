@@ -151,10 +151,10 @@ def chunk_documents(pages: list) -> list:
 
 def parse_pdf_layout(pdf_path: Path) -> List[Document]:
     """
-    Parse a PDF using PyMuPDF and return a list of `Document` objects per logical element.
+    Parse a PDF using PyMuPDF and return one Document per page.
 
-    We extract text blocks and use font size heuristics to mark headings.
-    Each returned Document contains metadata: source, page, element_type, bbox, font_size.
+    Blocks within a page are joined with double newlines so the
+    RecursiveCharacterTextSplitter can produce proper 500-char chunks.
     """
     docs: List[Document] = []
     doc = fitz.open(str(pdf_path))
@@ -163,42 +163,28 @@ def parse_pdf_layout(pdf_path: Path) -> List[Document]:
         page = doc.load_page(page_num)
         pdict = page.get_text("dict")
 
+        block_texts = []
         for block in pdict.get("blocks", []):
-            # only consider text blocks (type 0)
             if block.get("type") != 0:
                 continue
 
-            block_text_parts = []
-            max_font = 0.0
-
+            span_texts = []
             for line in block.get("lines", []):
                 for span in line.get("spans", []):
                     text = span.get("text", "").strip()
-                    if not text:
-                        continue
-                    block_text_parts.append(text)
-                    size = span.get("size", 0.0)
-                    if size and size > max_font:
-                        max_font = size
+                    if text:
+                        span_texts.append(text)
 
-            block_text = "\n".join(block_text_parts).strip()
-            if not block_text:
-                continue
+            block_text = " ".join(span_texts).strip()
+            if block_text:
+                block_texts.append(block_text)
 
-            # simple heuristic: larger font sizes are likely headings
-            element_type = "paragraph"
-            if max_font >= 13:
-                element_type = "heading"
-
-            metadata = {
-                "source": str(pdf_path),
-                "page": page_num,
-                "element_type": element_type,
-                "font_size": max_font,
-                "bbox": block.get("bbox")
-            }
-
-            docs.append(Document(page_content=block_text, metadata=metadata))
+        page_text = "\n\n".join(block_texts).strip()
+        if page_text:
+            docs.append(Document(
+                page_content=page_text,
+                metadata={"source": str(pdf_path), "page": page_num}
+            ))
 
     doc.close()
     return docs

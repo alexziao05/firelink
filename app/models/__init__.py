@@ -1,3 +1,5 @@
-from sqlalchemy.orm import declarative_base
+from .base import Base
+from .fire_incident import FireIncident
+from .weather_alert import WeatherAlert
 
-Base = declarative_base()
+__all__ = ["Base", "FireIncident", "WeatherAlert"]

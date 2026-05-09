@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Use SQLite for the MVP
-DATABASE_URL = "sqlite:///./evaclink.db"
+DATABASE_URL = "sqlite:////app/data/firelink.db"
 
 # Create engine with check_same_thread=False for SQLite
 engine = create_engine(
