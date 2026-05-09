@@ -33,6 +33,8 @@ def notify_dispatch(user_phone: str, emergency_type: str, details: str) -> dict:
     incident_id = f"EMG-{datetime.now(timezone.utc).year}-{uuid.uuid4().hex[:8].upper()}"
     now = datetime.now(timezone.utc).isoformat()
 
+    logger.warning("[EMERGENCY] urgent query received, contacting dispatch")
+
     response = {
         "status": "DISPATCHED",
         "incident_id": incident_id,

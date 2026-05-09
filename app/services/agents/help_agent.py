@@ -41,6 +41,19 @@ SHELTERS_PATH = PROJECT_ROOT / "app" / "data" / "shelters.json"
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
 MAX_TOKENS = 400
 
+SYSTEM_PROMPT = """You are FireLink, an informative, multilingual emergency assistant for the 2025 Eaton Fire in Los Angeles.
+Be calm, brief, and specific. Lead with the action, not the explanation. SMS only: 1-3 short sentences, plain text, no markdown, no bullet points.
+
+Language rule: ALWAYS respond in the same language as the USER MESSAGE. If the user mixes languages, use the dominant language. Never switch languages.
+
+Use only the information provided in the user message. If you cannot answer from that information, reply (in the user's language):
+"I don't have specific guidance for that. Please call 911 if you are in immediate danger."
+
+Tool policy:
+- If the user is in active life-threatening danger right now (trapped, injured, fire at the door, smoke inhalation, medical crisis, cannot evacuate), CALL notify_dispatch immediately.
+- Do NOT produce a text reply when calling the tool.
+"""
+
 NOTIFY_DISPATCH_TOOL = {
     "name": "notify_dispatch",
     "description": (
@@ -133,7 +146,7 @@ def serialize_advisory(advisory: dict | None) -> str:
     )
 
 
-def build_prompt(
+def build_user_prompt(
     phone: str,
     profile_text: str,
     fire_text: str,
@@ -143,21 +156,7 @@ def build_prompt(
     rag_text: str,
     user_message: str,
 ) -> str:
-    return f"""You are EmberLink, a calm, multilingual emergency assistant for the 2025 Eaton Fire in Los Angeles.
-You respond via SMS: 1-3 short sentences, plain text, no markdown, no bullet points.
-
-Detect the language of the USER MESSAGE and respond in the SAME language. Match the user's language exactly.
-
-EMERGENCY TRIAGE:
-If the user is in active life-threatening danger right now (trapped, injured, fire at the door,
-smoke inhalation, medical crisis, cannot evacuate), CALL the `notify_dispatch` tool immediately
-with the user's phone ({phone}), an emergency_type label, and a one-sentence details summary.
-Do NOT also produce a text reply when calling the tool — the dispatch system sends its own
-acknowledgement.
-For non-emergency questions (info, status, shelters, evacuation zones, prep), reply normally
-using ONLY the information below. If you cannot answer from this information, reply (translated
-into the user's language): "I don't have specific guidance for that. Please call 911 if you are in immediate danger."
-
+    return f"""CONTEXT
 USER PHONE: {phone}
 
 USER PROFILE:
@@ -180,22 +179,22 @@ RELEVANT KNOWLEDGE:
 
 USER MESSAGE:
 "{user_message}"
-
-Respond as EmberLink:"""
+"""
 
 
 async def _retrieve_chunks_async(message: str) -> list[str]:
     return await asyncio.to_thread(retrieve_chunks, message)
 
 
-async def _call_claude(prompt: str):
+async def _call_claude(user_prompt: str):
     """Single Claude call with the notify_dispatch tool available. Returns the raw message."""
     client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     return await client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=MAX_TOKENS,
         tools=[NOTIFY_DISPATCH_TOOL],
-        messages=[{"role": "user", "content": prompt}],
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_prompt}],
     )
 
 
@@ -271,7 +270,7 @@ async def handle_sms(phone: str, user_message: str) -> dict:
         else "No knowledge chunks retrieved."
     )
 
-    prompt = build_prompt(
+    user_prompt = build_user_prompt(
         phone=phone,
         profile_text=profile_text,
         fire_text=serialize_fire(fire_records),
@@ -282,7 +281,7 @@ async def handle_sms(phone: str, user_message: str) -> dict:
         user_message=user_message,
     )
 
-    message = await _call_claude(prompt)
+    message = await _call_claude(user_prompt)
 
     tool_use = _extract_tool_use(message)
     if tool_use is not None:
