@@ -232,7 +232,7 @@ export default async function DashboardResourcesPage({ params }: Props) {
       </section>
 
       <section aria-labelledby="sms-heading">
-        <SectionHeading eyebrow="Quick reference" title="Use EmberLink by SMS" id="sms-heading" />
+        <SectionHeading eyebrow="Quick reference" title="Use FireLink by SMS" id="sms-heading" />
         <SmsCommandList />
       </section>
 

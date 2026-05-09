@@ -1,4 +1,5 @@
 import type { SemanticTier } from "@/lib/dashboardSemantic";
+import { apiGet } from "@/lib/api";
 import fireIncidentsData from "@/data/fire_incidents.json";
 import weatherAlertsData from "@/data/weather_alerts.json";
 
@@ -259,10 +260,27 @@ export function getFireConditionsViewModel(
   };
 }
 
-/** Demo: bundled mock incidents + alerts (server-safe). */
+/** Demo: bundled mock incidents + alerts (server-safe, no network). */
 export function getMockFireConditionsViewModel(): FireConditionsViewModel | null {
   return getFireConditionsViewModel(
     fireIncidentsData as RawFireIncident[],
     weatherAlertsData as RawWeatherAlert[],
   );
+}
+
+/**
+ * Fetches incidents + alerts from the backend in parallel and builds the view
+ * model. Falls back to the bundled mock if either request fails so the demo
+ * never goes blank.
+ */
+export async function getLiveFireConditionsViewModel(): Promise<FireConditionsViewModel | null> {
+  try {
+    const [incidents, alerts] = await Promise.all([
+      apiGet<RawFireIncident[]>("/fire-incidents/"),
+      apiGet<RawWeatherAlert[]>("/weather-alerts/"),
+    ]);
+    return getFireConditionsViewModel(incidents, alerts);
+  } catch {
+    return getMockFireConditionsViewModel();
+  }
 }

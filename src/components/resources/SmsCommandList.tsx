@@ -17,7 +17,7 @@ export function SmsCommandList() {
   return (
     <div className={`rounded-2xl p-5 sm:p-6 ${shell}`}>
       <p className="text-sm font-semibold text-[var(--foreground)]">
-        Text these keywords to your EmberLink number:
+        Text these keywords to your FireLink number:
       </p>
       <dl className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-3">
         {commands.map(({ cmd, label }) => (

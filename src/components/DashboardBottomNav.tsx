@@ -17,6 +17,7 @@ function buildNav(zip: string): NavItem[] {
     { href: `${base}/needs`, label: "Needs", shortLabel: "Needs" },
     { href: `${base}/households`, label: "Community", shortLabel: "Comm." },
     { href: `${base}/resources`, label: "Resources", shortLabel: "Res." },
+    { href: `${base}/chat`, label: "Chat", shortLabel: "Chat" },
   ];
 }
 

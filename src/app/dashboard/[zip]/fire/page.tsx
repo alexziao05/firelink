@@ -1,5 +1,5 @@
 import { FireConditionsSection } from "@/components/fire/FireConditionsSection";
-import { getMockFireConditionsViewModel } from "@/lib/fireConditionsAdapter";
+import { getLiveFireConditionsViewModel } from "@/lib/fireConditionsAdapter";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function FireConditionsPage({ params }: Props) {
   const { zip } = await params;
-  const fireData = getMockFireConditionsViewModel();
+  const fireData = await getLiveFireConditionsViewModel();
 
   if (!fireData) {
     return (
