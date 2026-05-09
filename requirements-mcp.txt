@@ -1,0 +1,2 @@
+fastmcp>=2.0
+aiokafka==0.10.0

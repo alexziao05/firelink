@@ -2,6 +2,7 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: firelink-zookeeper
+    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -11,6 +12,7 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: firelink-kafka
+    restart: unless-stopped
     depends_on:
       - zookeeper
     environment:
@@ -23,20 +25,38 @@ services:
       - "9092:9092"
     networks:
       - firelink-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   backend:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: firelink-backend
+<<<<<<< HEAD
+=======
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+>>>>>>> d3ef0239d938661ba48b5b203dcd36bbcae3d6e5
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - KAFKA_BOOTSTRAP=kafka:9092
+      - CORS_ORIGINS=http://localhost:3000
     volumes:
       - ./app:/app/app
+<<<<<<< HEAD
       - ./docs:/app/docs
+=======
+      - firelink-db:/app/data
+>>>>>>> d3ef0239d938661ba48b5b203dcd36bbcae3d6e5
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - firelink-network
@@ -47,6 +67,74 @@ services:
       retries: 3
       start_period: 10s
 
+  calfire-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firelink-calfire-producer
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+    volumes:
+      - ./app:/app/app
+      - firelink-db:/app/data
+    command: python -m app.run_producer calfire
+    healthcheck:
+      disable: true
+    networks:
+      - firelink-network
+
+  noaa-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firelink-noaa-producer
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+    volumes:
+      - ./app:/app/app
+      - firelink-db:/app/data
+    command: python -m app.run_producer noaa
+    healthcheck:
+      disable: true
+    networks:
+      - firelink-network
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    container_name: firelink-mcp-server
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - MCP_TRANSPORT=sse
+      - MCP_PORT=8001
+    volumes:
+      - ./app:/app/app
+    networks:
+      - firelink-network
+    healthcheck:
+      disable: true
+
 networks:
   firelink-network:
     driver: bridge
+
+volumes:
+  firelink-db:
