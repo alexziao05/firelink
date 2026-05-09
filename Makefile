@@ -1,10 +1,10 @@
 COMPOSE_FILE := docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
 
-.PHONY: help check up up-build down logs ps health \
+.PHONY: help check up up-build down clean logs ps health \
         logs-calfire logs-noaa logs-all logs-mcp logs-recommendation \
         stream-fire stream-weather stream-recommendations \
-        context topics mcp-server
+        context topics mcp-server ingest rag-test test
 
 help:
 	@echo "Available targets:"
@@ -12,6 +12,7 @@ help:
 	@echo "  make up             Start all containers"
 	@echo "  make up-build       Build and start all containers"
 	@echo "  make down           Stop all containers"
+	@echo "  make clean          Stop, remove volumes (wipes SQLite) and orphans"
 	@echo "  make ps             Show container status"
 	@echo "  make health         Check the backend health endpoint"
 	@echo ""
@@ -28,6 +29,9 @@ help:
 	@echo "  make logs-recommendation Follow recommendation agent logs"
 	@echo "  make stream-recommendations Live Kafka stream: firelink.recommendations"
 	@echo "  make mcp-server          Run FastMCP context server locally (stdio transport)"
+	@echo "  make ingest              One-shot ingest of docs/*.pdf into Pinecone"
+	@echo "  make rag-test            Replay rag_test_cases.json against the RAG pipeline"
+	@echo "  make test                Smoke-test running stack (make + REST + RAG)"
 
 check:
 	@command -v docker >/dev/null 2>&1 || { echo "Docker is not installed or not on PATH."; exit 1; }
@@ -42,6 +46,9 @@ up-build:
 
 down:
 	$(COMPOSE) down
+
+clean:
+	$(COMPOSE) down -v --remove-orphans
 
 logs:
 	$(COMPOSE) logs -f backend
@@ -96,3 +103,12 @@ topics:
 mcp-server:
 	@python3 -c "import fastmcp" 2>/dev/null || pip3 install -r requirements-mcp.txt
 	KAFKA_BOOTSTRAP=localhost:9092 python3 -m app.mcp_server
+
+ingest:
+	$(COMPOSE) exec backend python -m app.services.knowledge.ingest
+
+rag-test:
+	$(COMPOSE) exec backend python -m app.services.knowledge.rag_query
+
+test:
+	@python3 test/smoke_test.py
