@@ -47,9 +47,13 @@ services:
       - PYTHONUNBUFFERED=1
       - KAFKA_BOOTSTRAP=kafka:9092
       - CORS_ORIGINS=http://localhost:3000
-      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME:-emberlink}
     volumes:
       - ./app:/app/app
+      - ./docs:/app/docs
       - firelink-db:/app/data
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
@@ -138,7 +142,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - KAFKA_BOOTSTRAP=kafka:9092
-      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ./app:/app/app
       - firelink-db:/app/data

@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from groq import AsyncGroq
+from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +29,10 @@ Respond ONLY with this JSON object (no markdown, no extra text):
 
 
 class BaseAgent:
-    model = "llama-3.3-70b-versatile"
+    model = "gpt-4o-mini"
 
     def __init__(self):
-        self.client = AsyncGroq(api_key=os.environ["GROQ_API_KEY"])
+        self.client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
     async def call_llm(self, context: dict) -> dict:
         response = await self.client.chat.completions.create(
