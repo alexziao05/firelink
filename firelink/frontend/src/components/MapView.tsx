@@ -13,6 +13,7 @@ interface MapViewProps {
   selectedLocation: { lat: number; lng: number } | null;
   route: RouteResponse | null;
   onLocationSelect: (lat: number, lng: number) => void;
+  selectionMode?: boolean;
 }
 
 interface MapInstance {

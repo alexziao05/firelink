@@ -41,6 +41,7 @@ const App: React.FC = () => {
   const [apiHealth, setApiHealth] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [routeSheetOpen, setRouteSheetOpen] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
 
   // Initialize app: check API health and load data
   useEffect(() => {
@@ -48,6 +49,9 @@ const App: React.FC = () => {
       try {
         await client.health();
         setApiHealth(true);
+        // Default the initial selected location to SDSU (San Diego State University)
+        // so reporting starts focused on that campus.
+        setSelectedLocation({ lat: 32.7757, lng: -117.071 });
         await loadData();
       } catch (err) {
         setError("Failed to connect to EvacLink backend. Is it running?");
@@ -215,10 +219,17 @@ const App: React.FC = () => {
             riskCells={riskCells}
             selectedLocation={selectedLocation}
             route={route}
+            selectionMode={selectionMode}
             onLocationSelect={(lat, lng) => {
               handleLocationSelect(lat, lng);
-              // open route sheet when a location is selected
-              setRouteSheetOpen(true);
+              if (selectionMode) {
+                // selection was intentional for changing location
+                setSelectionMode(false);
+                setReportSheetOpen(true);
+              } else {
+                // normal map click: show route sheet
+                setRouteSheetOpen(true);
+              }
             }}
           />
         </div>

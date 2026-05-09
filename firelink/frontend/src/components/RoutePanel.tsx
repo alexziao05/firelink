@@ -82,7 +82,6 @@ const RoutePanel: React.FC<RoutePanelProps> = ({
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: "12px" }}>Evacuation Route</h3>
 
       <div style={{ marginBottom: "12px" }}>
         <label style={{ display: "block", marginBottom: "4px", fontWeight: "bold" }}>

@@ -28,6 +28,14 @@ const ReportForm: React.FC<ReportFormProps> = ({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const reportOptions: { value: ReportType; label: string; emoji: string }[] = [
+    { value: "fire_seen", label: "Fire Seen", emoji: "🔥" },
+    { value: "blocked_road", label: "Blocked Road", emoji: "🛑" },
+    { value: "heavy_smoke", label: "Heavy Smoke", emoji: "💨" },
+    { value: "assistance_needed", label: "Assistance Needed", emoji: "🆘" },
+    { value: "power_outage", label: "Power Outage", emoji: "⚡" },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -66,30 +74,50 @@ const ReportForm: React.FC<ReportFormProps> = ({
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: "12px" }}>Report Incident</h3>
-
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "12px" }}>
-          <label style={{ display: "block", marginBottom: "4px", fontWeight: "bold" }}>
+          <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
             Report Type
           </label>
-          <select
-            value={reportType}
-            onChange={(e) => setReportType(e.target.value as ReportType)}
+
+          <div
             style={{
-              width: "100%",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              boxSizing: "border-box",
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "8px",
             }}
           >
-            <option value="fire_seen">🔥 Fire Seen</option>
-            <option value="blocked_road">🛑 Blocked Road</option>
-            <option value="heavy_smoke">💨 Heavy Smoke</option>
-            <option value="assistance_needed">🆘 Assistance Needed</option>
-            <option value="power_outage">⚡ Power Outage</option>
-          </select>
+            {reportOptions.map((opt) => {
+              const selected = reportType === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setReportType(opt.value)}
+                  aria-pressed={selected}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    border: selected ? "2px solid #c0392b" : "1px solid #ccc",
+                    background: selected ? "#e74c3c" : "#fff",
+                    color: selected ? "#fff" : "#222",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    minHeight: "56px",
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{opt.emoji}</span>
+                  <span style={{ fontSize: 12 }}>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div style={{ marginBottom: "12px" }}>
