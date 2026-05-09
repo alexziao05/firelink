@@ -1,0 +1,160 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: firelink-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - firelink-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: firelink-kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+    networks:
+      - firelink-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firelink-backend
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - CORS_ORIGINS=http://localhost:3000
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME:-emberlink}
+    volumes:
+      - ./app:/app/app
+      - ./docs:/app/docs
+      - firelink-db:/app/data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - firelink-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  calfire-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firelink-calfire-producer
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+    volumes:
+      - ./app:/app/app
+      - firelink-db:/app/data
+    command: python -m app.run_producer calfire
+    healthcheck:
+      disable: true
+    networks:
+      - firelink-network
+
+  noaa-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firelink-noaa-producer
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+    volumes:
+      - ./app:/app/app
+      - firelink-db:/app/data
+    command: python -m app.run_producer noaa
+    healthcheck:
+      disable: true
+    networks:
+      - firelink-network
+
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    container_name: firelink-mcp-server
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - MCP_TRANSPORT=sse
+      - MCP_PORT=8001
+    volumes:
+      - ./app:/app/app
+    networks:
+      - firelink-network
+    healthcheck:
+      disable: true
+
+  recommendation-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firelink-recommendation-agent
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - PYTHONUNBUFFERED=1
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./app:/app/app
+      - firelink-db:/app/data
+    command: python -m app.run_agent recommendation
+    healthcheck:
+      disable: true
+    networks:
+      - firelink-network
+
+networks:
+  firelink-network:
+    driver: bridge
+
+volumes:
+  firelink-db:

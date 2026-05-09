@@ -1,0 +1,34 @@
+[
+  {
+    "phone": "+16195550001",
+    "message": "There's smoke coming under my door, what do I do?"
+  },
+  {
+    "phone": "+16195550002",
+    "message": "Should I evacuate now or wait?"
+  },
+  {
+    "phone": "+16195550003",
+    "message": "I have pets and no car, how do I get out?"
+  },
+  {
+    "phone": "+16195550003",
+    "message": "Where is the nearest open shelter that takes pets?"
+  },
+  {
+    "phone": "+16195550004",
+    "message": "What's the current containment and is the wind still high?"
+  },
+  {
+    "phone": "+16195550005",
+    "message": "What preparedness steps am I missing?"
+  },
+  {
+    "phone": "+16195550003",
+    "message": "¿Necesito evacuar ahora? Tengo una mascota y no tengo carro."
+  },
+  {
+    "phone": "+16195550001",
+    "message": "¿Dónde está el refugio más cercano?"
+  }
+]

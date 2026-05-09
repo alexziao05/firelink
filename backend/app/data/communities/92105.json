@@ -1,0 +1,60 @@
+{
+  "zip": "92105",
+  "stats": {
+    "registeredHouseholds": 12,
+    "pets": 5,
+    "transportationNeeds": 3,
+    "medicalPowerNeeds": 2,
+    "markedSafe": 4,
+    "requestedHelp": 2,
+    "volunteers": 3,
+    "averagePreparedness": 58
+  },
+  "households": [
+    {"anonymous_id": "N3XP", "zip_code": "92105", "has_pets": true,  "has_transport": false, "medical_needs": false, "can_volunteer": false, "status": "Needs ride",                   "prep_score": 45},
+    {"anonymous_id": "Q8WR", "zip_code": "92105", "has_pets": false, "has_transport": true,  "medical_needs": false, "can_volunteer": true,  "status": "Safe",                         "prep_score": 90},
+    {"anonymous_id": "T2LS", "zip_code": "92105", "has_pets": true,  "has_transport": true,  "medical_needs": false, "can_volunteer": false, "status": "Preparing",                    "prep_score": 62},
+    {"anonymous_id": "V9KM", "zip_code": "92105", "has_pets": false, "has_transport": false, "medical_needs": true,  "can_volunteer": false, "status": "Medical device power support", "prep_score": 51},
+    {"anonymous_id": "X1HJ", "zip_code": "92105", "has_pets": true,  "has_transport": false, "medical_needs": false, "can_volunteer": false, "status": "Shelter info",                 "prep_score": 37},
+    {"anonymous_id": "Z4PC", "zip_code": "92105", "has_pets": false, "has_transport": true,  "medical_needs": false, "can_volunteer": true,  "status": "Safe",                         "prep_score": 78},
+    {"anonymous_id": "B6DF", "zip_code": "92105", "has_pets": false, "has_transport": false, "medical_needs": false, "can_volunteer": false, "status": "Requested help",               "prep_score": 29},
+    {"anonymous_id": "D7MN", "zip_code": "92105", "has_pets": true,  "has_transport": true,  "medical_needs": false, "can_volunteer": false, "status": "Safe",                         "prep_score": 71},
+    {"anonymous_id": "F0RT", "zip_code": "92105", "has_pets": false, "has_transport": false, "medical_needs": true,  "can_volunteer": false, "status": "Medical device power support", "prep_score": 46},
+    {"anonymous_id": "H5YW", "zip_code": "92105", "has_pets": false, "has_transport": true,  "medical_needs": false, "can_volunteer": true,  "status": "Preparing",                    "prep_score": 66},
+    {"anonymous_id": "J8QC", "zip_code": "92105", "has_pets": true,  "has_transport": false, "medical_needs": false, "can_volunteer": false, "status": "Needs ride",                   "prep_score": 34},
+    {"anonymous_id": "L2VB", "zip_code": "92105", "has_pets": false, "has_transport": true,  "medical_needs": false, "can_volunteer": false, "status": "Safe",                         "prep_score": 83}
+  ],
+  "needs": [
+    {"label": "Evacuation rides",             "count": 3},
+    {"label": "Water delivery",               "count": 2},
+    {"label": "Accessible shelter beds",      "count": 1},
+    {"label": "Medical device power support", "count": 2},
+    {"label": "Pet transport",                "count": 2},
+    {"label": "Translation help",             "count": 1},
+    {"label": "Volunteer driver matches",     "count": 2},
+    {"label": "Marked safe",                  "count": 4},
+    {"label": "Prescription pickup",          "count": 1},
+    {"label": "Ice / cooling centers",        "count": 1},
+    {"label": "Shelter info",                 "count": 2},
+    {"label": "Accessible evacuation rides",  "count": 1},
+    {"label": "N95 / smoke masks",            "count": 2}
+  ],
+  "events": [
+    {"id": "92105-e1", "message": "Household N3XP requested evacuation transport",          "timestamp": "2026-05-09T17:55:00.000Z"},
+    {"id": "92105-e2", "message": "Household Q8WR marked safe",                              "timestamp": "2026-05-09T17:20:00.000Z"},
+    {"id": "92105-e3", "message": "Household V9KM requested medical device power support",  "timestamp": "2026-05-09T16:40:00.000Z"},
+    {"id": "92105-e4", "message": "Household H5YW volunteered for neighborhood transport",  "timestamp": "2026-05-09T15:30:00.000Z"},
+    {"id": "92105-e5", "message": "Household T2LS completed go-bag task",                    "timestamp": "2026-05-09T14:15:00.000Z"},
+    {"id": "92105-e6", "message": "Household X1HJ asked for shelter info",                   "timestamp": "2026-05-08T20:00:00.000Z"}
+  ],
+  "resources": [
+    {"id": "r1", "title": "County emergency hotline",            "description": "Official evacuation orders and shelter openings.",                  "detail": "Call your county OES number or 2-1-1 for verified shelter locations."},
+    {"id": "r2", "title": "Pet-friendly shelter lookup",         "description": "Aggregate shelter capacity by ZIP — no personal data required.",   "detail": "Check Red Cross / county animal services for co-sheltering options."},
+    {"id": "r3", "title": "Community transport coordination",    "description": "Volunteers matched at neighborhood level only.",                   "detail": "Sign up via SMS; dashboard shows counts, not rider identities."},
+    {"id": "r4", "title": "Go-bag checklist (SMS)",              "description": "Text PREP for a short checklist; reply DONE with task numbers.",   "detail": "Progress updates community preparedness scores anonymously."},
+    {"id": "r5", "title": "Medical device power bank loan",      "description": "Short-term battery packs for CPAP and similar devices.",           "detail": "Pickup hubs listed by ZIP; return when grid status is restored."},
+    {"id": "r6", "title": "Cooling center map",                  "description": "Hours and capacity for heat-relief locations.",                    "detail": "Updated from county public health; accessibility notes included."},
+    {"id": "r7", "title": "Multi-language alert digest",         "description": "Machine-translated summaries of official alerts.",                  "detail": "Not a substitute for official sources; links back to primary feeds."},
+    {"id": "r8", "title": "Neighborhood wellness check script",  "description": "Short SMS prompts for block-level check-ins.",                     "detail": "Volunteers log counts only — no names stored on the dashboard."}
+  ]
+}
