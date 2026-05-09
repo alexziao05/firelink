@@ -2,8 +2,8 @@ COMPOSE_FILE := docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
 
 .PHONY: help check up up-build down logs ps health \
-        logs-calfire logs-noaa logs-all logs-mcp \
-        stream-fire stream-weather \
+        logs-calfire logs-noaa logs-all logs-mcp logs-recommendation \
+        stream-fire stream-weather stream-recommendations \
         context topics mcp-server
 
 help:
@@ -24,8 +24,10 @@ help:
 	@echo "  make stream-weather Live Kafka stream: firelink.weather"
 	@echo "  make context        Fetch /context/latest (pretty-printed JSON)"
 	@echo "  make topics         List all Kafka topics"
-	@echo "  make logs-mcp       Follow MCP server logs"
-	@echo "  make mcp-server     Run FastMCP context server locally (stdio transport)"
+	@echo "  make logs-mcp            Follow MCP server logs"
+	@echo "  make logs-recommendation Follow recommendation agent logs"
+	@echo "  make stream-recommendations Live Kafka stream: firelink.recommendations"
+	@echo "  make mcp-server          Run FastMCP context server locally (stdio transport)"
 
 check:
 	@command -v docker >/dev/null 2>&1 || { echo "Docker is not installed or not on PATH."; exit 1; }
@@ -62,6 +64,9 @@ logs-all:
 logs-mcp:
 	$(COMPOSE) logs -f mcp-server
 
+logs-recommendation:
+	$(COMPOSE) logs -f recommendation-agent
+
 stream-fire:
 	docker exec firelink-kafka kafka-console-consumer \
 		--bootstrap-server localhost:9092 \
@@ -72,6 +77,12 @@ stream-weather:
 	docker exec firelink-kafka kafka-console-consumer \
 		--bootstrap-server localhost:9092 \
 		--topic firelink.weather \
+		--from-beginning
+
+stream-recommendations:
+	docker exec firelink-kafka kafka-console-consumer \
+		--bootstrap-server localhost:9092 \
+		--topic firelink.recommendations \
 		--from-beginning
 
 context:
