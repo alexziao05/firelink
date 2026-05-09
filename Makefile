@@ -1,10 +1,13 @@
 COMPOSE_FILE := docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
+FRONTEND_DIR := ../frontend
+NPM := npm --prefix $(FRONTEND_DIR)
 
 .PHONY: help check up up-build down clean logs ps health \
         logs-calfire logs-noaa logs-all logs-mcp logs-recommendation \
         stream-fire stream-weather stream-recommendations \
-        context topics mcp-server ingest sms sms-replay test
+        context topics mcp-server ingest sms sms-replay test \
+        frontend-install frontend-dev frontend-build frontend-start frontend-lint dev-all
 
 help:
 	@echo "Available targets:"
@@ -33,6 +36,13 @@ help:
 	@echo "  make sms                 Interactive SMS simulator (talks to /sms/inbound)"
 	@echo "  make sms-replay          Batch-replay sms_test_cases.json through the Help Agent"
 	@echo "  make test                Smoke-test running stack (make + REST + Help Agent)"
+	@echo ""
+	@echo "  make frontend-install    Install Next.js dependencies (npm install)"
+	@echo "  make frontend-dev        Run Next.js dev server (port 3000)"
+	@echo "  make frontend-build      Production build of the Next.js app"
+	@echo "  make frontend-start      Run the production Next.js server"
+	@echo "  make frontend-lint       Run eslint on the frontend"
+	@echo "  make dev-all             Start backend stack + frontend dev server"
 
 check:
 	@command -v docker >/dev/null 2>&1 || { echo "Docker is not installed or not on PATH."; exit 1; }
@@ -116,3 +126,25 @@ sms-replay:
 
 test:
 	@python3 test/smoke_test.py
+
+frontend-install:
+	$(NPM) install
+
+frontend-dev:
+	@test -d $(FRONTEND_DIR)/node_modules || $(NPM) install
+	$(NPM) run dev
+
+frontend-build:
+	@test -d $(FRONTEND_DIR)/node_modules || $(NPM) install
+	$(NPM) run build
+
+frontend-start:
+	$(NPM) run start
+
+frontend-lint:
+	$(NPM) run lint
+
+dev-all:
+	@echo "Starting backend stack (detached) + frontend dev server…"
+	$(COMPOSE) up -d
+	@$(MAKE) frontend-dev

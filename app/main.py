@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.database import init_db
+from .routes.community import router as community_router
 from .routes.context import router as context_router
 from .routes.fire_incidents import router as fire_incidents_router
 from .routes.weather_alerts import router as weather_alerts_router
@@ -38,6 +39,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(community_router)
 app.include_router(context_router)
 app.include_router(fire_incidents_router)
 app.include_router(weather_alerts_router)
