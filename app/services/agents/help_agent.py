@@ -26,6 +26,7 @@ from app.services.context_service import (
     get_latest_context,
     get_latest_recommendation,
 )
+from app.services.dispatch_service import notify_dispatch
 from app.services.knowledge.rag_query import (
     PROJECT_ROOT,
     load_mock_users,
@@ -39,6 +40,36 @@ SHELTERS_PATH = PROJECT_ROOT / "app" / "data" / "shelters.json"
 
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
 MAX_TOKENS = 400
+
+NOTIFY_DISPATCH_TOOL = {
+    "name": "notify_dispatch",
+    "description": (
+        "Notify emergency dispatch (911) for an active, life-threatening situation. "
+        "Call ONLY when the user reports immediate danger right now: trapped, injured, "
+        "burned, unconscious, fire inside or at the door, smoke inhalation, medical "
+        "crisis, surrounded by flames, or unable to evacuate. "
+        "Do NOT call for information questions, status checks, shelter inquiries, "
+        "evacuation-zone questions, or past-tense reports."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "user_phone": {
+                "type": "string",
+                "description": "User's phone number in E.164 format.",
+            },
+            "emergency_type": {
+                "type": "string",
+                "description": "Short label such as 'trapped', 'medical', 'fire_at_residence', 'injured'.",
+            },
+            "details": {
+                "type": "string",
+                "description": "One-sentence factual summary of the situation in English.",
+            },
+        },
+        "required": ["user_phone", "emergency_type", "details"],
+    },
+}
 
 
 def load_shelters() -> list[dict]:
@@ -103,6 +134,7 @@ def serialize_advisory(advisory: dict | None) -> str:
 
 
 def build_prompt(
+    phone: str,
     profile_text: str,
     fire_text: str,
     weather_text: str,
@@ -116,8 +148,17 @@ You respond via SMS: 1-3 short sentences, plain text, no markdown, no bullet poi
 
 Detect the language of the USER MESSAGE and respond in the SAME language. Match the user's language exactly.
 
-Use ONLY the information provided below. If you cannot answer from this information, reply (translated into the user's language):
-"I don't have specific guidance for that. Please call 911 if you are in immediate danger."
+EMERGENCY TRIAGE:
+If the user is in active life-threatening danger right now (trapped, injured, fire at the door,
+smoke inhalation, medical crisis, cannot evacuate), CALL the `notify_dispatch` tool immediately
+with the user's phone ({phone}), an emergency_type label, and a one-sentence details summary.
+Do NOT also produce a text reply when calling the tool — the dispatch system sends its own
+acknowledgement.
+For non-emergency questions (info, status, shelters, evacuation zones, prep), reply normally
+using ONLY the information below. If you cannot answer from this information, reply (translated
+into the user's language): "I don't have specific guidance for that. Please call 911 if you are in immediate danger."
+
+USER PHONE: {phone}
 
 USER PROFILE:
 {profile_text}
@@ -147,18 +188,41 @@ async def _retrieve_chunks_async(message: str) -> list[str]:
     return await asyncio.to_thread(retrieve_chunks, message)
 
 
-async def _call_claude(prompt: str) -> str:
+async def _call_claude(prompt: str):
+    """Single Claude call with the notify_dispatch tool available. Returns the raw message."""
     client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-    message = await client.messages.create(
+    return await client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=MAX_TOKENS,
+        tools=[NOTIFY_DISPATCH_TOOL],
         messages=[{"role": "user", "content": prompt}],
     )
-    return message.content[0].text
 
 
-async def handle_sms(phone: str, user_message: str) -> str:
-    """Full Help-Agent pipeline for one inbound SMS. Returns the reply text."""
+def _extract_tool_use(message):
+    for block in message.content:
+        if getattr(block, "type", None) == "tool_use" and block.name == "notify_dispatch":
+            return block
+    return None
+
+
+def _extract_text(message) -> str:
+    for block in message.content:
+        if getattr(block, "type", None) == "text":
+            return block.text
+    return ""
+
+
+async def handle_sms(phone: str, user_message: str) -> dict:
+    """Full Help-Agent pipeline for one inbound SMS.
+
+    Returns:
+        {
+            "reply": str,              # SMS reply text
+            "is_emergency": bool,      # whether dispatch was triggered
+            "dispatch": dict | None,   # full dispatch JSON (frontend payload) or None
+        }
+    """
     # 1. User profile
     try:
         users = load_mock_users()
@@ -208,6 +272,7 @@ async def handle_sms(phone: str, user_message: str) -> str:
     )
 
     prompt = build_prompt(
+        phone=phone,
         profile_text=profile_text,
         fire_text=serialize_fire(fire_records),
         weather_text=serialize_weather(weather_records),
@@ -217,4 +282,19 @@ async def handle_sms(phone: str, user_message: str) -> str:
         user_message=user_message,
     )
 
-    return await _call_claude(prompt)
+    message = await _call_claude(prompt)
+
+    tool_use = _extract_tool_use(message)
+    if tool_use is not None:
+        dispatch = notify_dispatch(
+            user_phone=tool_use.input.get("user_phone", phone),
+            emergency_type=tool_use.input.get("emergency_type", "unspecified"),
+            details=tool_use.input.get("details", user_message),
+        )
+        ack = (
+            f"Emergency dispatch notified. Units en route, ETA ~{dispatch['eta_minutes']} min. "
+            f"Incident #{dispatch['incident_id']}. Stay on the line if safe."
+        )
+        return {"reply": ack, "is_emergency": True, "dispatch": dispatch}
+
+    return {"reply": _extract_text(message), "is_emergency": False, "dispatch": None}

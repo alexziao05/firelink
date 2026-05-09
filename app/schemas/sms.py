@@ -8,3 +8,5 @@ class SMSInboundRequest(BaseModel):
 
 class SMSOutboundResponse(BaseModel):
     reply: str
+    is_emergency: bool = False
+    dispatch: dict | None = None
