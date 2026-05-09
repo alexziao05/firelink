@@ -29,15 +29,14 @@ load_dotenv()
 
 OPENAI_API_KEY   = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-INDEX_NAME       = os.getenv("PINECONE_INDEX_NAME", "emberlink")
+INDEX_NAME       = os.getenv("PINECONE_INDEX_NAME", "firelink")
 DOCS_NAMESPACE   = "docs"
-TOP_K            = 5
+TOP_K            = 5 # for RAG retrieval
 
 # Resolve data files relative to this file: app/services/knowledge/rag_query.py
 # parents[3] climbs to repo root (knowledge → services → app → root).
 PROJECT_ROOT     = Path(__file__).resolve().parents[3]
 MOCK_USERS_PATH  = PROJECT_ROOT / "app" / "data" / "mock_users.json"
-TEST_CASES_PATH  = PROJECT_ROOT / "app" / "data" / "rag_test_cases.json"
 
 
 def load_mock_users() -> dict:
@@ -102,7 +101,7 @@ def build_prompt(user_profile_str: str, chunks: list[str], user_message: str) ->
         f"[Source {i+1}]:\n{chunk}" for i, chunk in enumerate(chunks)
     )
 
-    return f"""You are EmberLink, a calm emergency wildfire assistant responding via SMS.
+    return f"""You are FireLink, a calm emergency wildfire assistant responding via SMS.
 Only use the information provided below to answer. Do not add information not present here.
 If you cannot answer from the provided knowledge, say: "I don't have specific guidance for that. Please call 911 if you are in immediate danger."
 
@@ -177,4 +176,4 @@ if __name__ == "__main__":
             phone_number=test["phone"],
             user_message=test["message"],
         )
-        print(f"EmberLink: {response}")
+        print(f"FireLink: {response}")

@@ -13,6 +13,8 @@ TOPICS = {
     "fire":    "firelink.fire",
 }
 
+RECOMMENDATIONS_TOPIC = "firelink.recommendations"
+
 MESSAGES_PER_TOPIC = 10
 
 
@@ -67,3 +69,30 @@ async def get_latest_context() -> dict:
         "fire":    fire,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+async def get_latest_recommendation() -> dict | None:
+    """Read the most recent advisory from the recommendations topic, or None if empty."""
+    consumer = AIOKafkaConsumer(
+        RECOMMENDATIONS_TOPIC,
+        bootstrap_servers=KAFKA_BOOTSTRAP,
+        auto_offset_reset="earliest",
+        enable_auto_commit=False,
+    )
+    await consumer.start()
+    try:
+        partitions = [
+            TopicPartition(RECOMMENDATIONS_TOPIC, p)
+            for p in consumer.partitions_for_topic(RECOMMENDATIONS_TOPIC) or [0]
+        ]
+        end_offsets = await consumer.end_offsets(partitions)
+        for tp in partitions:
+            end = end_offsets[tp]
+            if end == 0:
+                return None
+            consumer.seek(tp, end - 1)
+            msg = await asyncio.wait_for(consumer.getone(tp), timeout=3.0)
+            return json.loads(msg.value)
+        return None
+    finally:
+        await consumer.stop()
