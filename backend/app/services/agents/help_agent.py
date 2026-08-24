@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 SHELTERS_PATH = PROJECT_ROOT / "app" / "data" / "shelters.json"
 
-CLAUDE_MODEL = "claude-sonnet-4-20250514"
+CLAUDE_MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 400
 
 SYSTEM_PROMPT = """You are FireLink, an informative, multilingual emergency assistant for the 2025 Eaton Fire in Los Angeles.

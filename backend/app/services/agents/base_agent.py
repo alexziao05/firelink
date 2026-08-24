@@ -32,7 +32,12 @@ class BaseAgent:
     model = "gpt-4o-mini"
 
     def __init__(self):
-        self.client = AsyncOpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "OPENAI_API_KEY is not set. Add it to backend/.env or export it in your shell."
+            )
+        self.client = AsyncOpenAI(api_key=api_key)
 
     async def call_llm(self, context: dict) -> dict:
         response = await self.client.chat.completions.create(

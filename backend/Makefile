@@ -1,15 +1,17 @@
 COMPOSE_FILE := docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
 FRONTEND_DIR := ../frontend
-# nvm-managed node is not on make's restricted PATH; resolve npm explicitly.
-NPM_BIN ?= /Users/alexhuang/.nvm/versions/node/v24.15.0/bin/npm
+# nvm-managed node is not on make's restricted PATH; resolve npm dynamically
+# from whatever shell invoked make (e.g. after `nvm use`). Override with
+# `make frontend-dev NPM_BIN=/path/to/npm` if it can't be found this way.
+NPM_BIN ?= $(shell command -v npm 2>/dev/null)
 NPM := $(NPM_BIN) --prefix $(FRONTEND_DIR)
 
 .PHONY: help check up up-build down clean logs ps health \
         logs-calfire logs-noaa logs-all logs-mcp logs-recommendation \
         stream-fire stream-weather stream-recommendations \
         context topics mcp-server ingest sms sms-replay test \
-        frontend-install frontend-dev frontend-build frontend-start frontend-lint
+        check-npm frontend-install frontend-dev frontend-build frontend-start frontend-lint
 
 help:
 	@echo "Available targets:"
@@ -128,19 +130,22 @@ sms-replay:
 test:
 	@python3 test/smoke_test.py
 
-frontend-install:
+check-npm:
+	@test -n "$(NPM_BIN)" || { echo "npm not found on PATH. Run 'nvm use' (or otherwise ensure npm is on PATH) before using frontend-* targets, or override: make frontend-dev NPM_BIN=/path/to/npm"; exit 1; }
+
+frontend-install: check-npm
 	$(NPM) install
 
-frontend-dev:
+frontend-dev: check-npm
 	@test -d $(FRONTEND_DIR)/node_modules || $(NPM) install
 	$(NPM) run dev
 
-frontend-build:
+frontend-build: check-npm
 	@test -d $(FRONTEND_DIR)/node_modules || $(NPM) install
 	$(NPM) run build
 
-frontend-start:
+frontend-start: check-npm
 	$(NPM) run start
 
-frontend-lint:
+frontend-lint: check-npm
 	$(NPM) run lint

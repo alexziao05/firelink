@@ -1,5 +1,5 @@
 """
-Database configuration and utilities for EvacLink.
+Database configuration and utilities for Firelink.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

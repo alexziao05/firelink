@@ -8,7 +8,7 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "communities"
 
-
+# store results of recent calls in in-memory cache
 @lru_cache(maxsize=64)
 def _load(zip_code: str) -> dict | None:
     path = DATA_DIR / f"{zip_code}.json"

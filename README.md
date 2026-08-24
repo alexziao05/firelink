@@ -308,5 +308,6 @@ Set `NEXT_PUBLIC_API_URL` in environment before `npm run build` — Next.js bake
 
 - `backend/README.md` — service-by-service architecture, Kafka topics, agent internals
 - `frontend/README.md` — Next.js app routes, dashboard wiring
-- `backend/api-producer.md` — producer replay format
+- `docs/architecture-breakdown.md` — full-stack overview (backend endpoints/agents + frontend routes/structure)
+- `docs/streaming-pipeline.md` — real-time data pipeline: data sources, Kafka internals, context retrieval
 - `backend/docs/` — wildfire knowledge PDFs ingested into Pinecone
