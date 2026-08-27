@@ -1,19 +1,63 @@
-**APP ANALYSIS (Frontend + Backend)**
+## **APP ANALYSIS (Frontend + Backend)**
+
+### What is Firelink?
 
 Wildfire intelligence platform built as monorepo (backend + frontend in one) with Python/FastAPI streaming backend, Next.js dashboard frontend. Scenario is built around real 2025 Eaton fire in LA, with 199 real calfire updates + Open-Meteo weather observations replayed through Kafka.
 
-- Overall Architecture (High-Level):
+### Overall Architecture (High-Level):
     - Data(JSON) → Kafka Producers → Kafka Topics → FastAPI reads → AI Agents → REST API → Next.js dashboard (fetches from `/context` , `/sms` , and `/community` )
-- Backend
+
+```mermaid
+flowchart LR
+    subgraph Data["Raw Data"]
+        FJ[fire_incidents.json]
+        WJ[weather_alerts.json]
+    end
+
+    subgraph Kafka["Kafka"]
+        CP[calfire-producer]
+        NP[noaa-producer]
+        TF[(firelink.fire)]
+        TW[(firelink.weather)]
+        TR[(firelink.recommendations)]
+    end
+
+    subgraph Backend["FastAPI Backend & Agents"]
+        CTX[context_service<br/>last 10 msgs / topic]
+        RA[Recommendation Agent<br/>GPT-4o-mini · every 60s]
+        HA[Help Agent<br/>Claude + RAG]
+        API[REST API<br/>/context · /sms · /community · /agents]
+    end
+
+    RAG[(Pinecone<br/>RAG chunks)]
+    MCP[MCP Server<br/>get_context · notify_dispatch]
+    DASH[Next.js Dashboard<br/>fire · needs · community · resources · chat]
+
+    FJ --> CP --> TF
+    WJ --> NP --> TW
+    TF --> CTX
+    TW --> CTX
+    CTX --> RA --> TR --> CTX
+    CTX --> API
+    CTX --> HA
+    RAG --> HA
+    HA --> API
+    CTX --> MCP
+    API --> DASH
+```
+
+
+### Backend
     - Running `make up build` builds images and starts 7 docker containers
-        - firelink-backend: FastAPI server (port 8000) - CRUD + Help Agent + context
-        - firelink-recommendation-agent: uses OpenAI `gpt-4o-mini` to emit a summarized advisory every minute (runs script `app.run_agent recommendation` )
-        - firelink-calfire-producer: replays `fire_incidents.json` → Kafka every 10s (runs script `app.run_producer.py calfire` )
-        - firelink-noaa-producer: replays `weather_alerts.json` → Kafka every 10s (runs script `app.run_producer.py noaa` )
-        - firelink-mcp-server: uses `Dockerfile.mcp`  (port 8001), runs FastMCP server exposing `get_context` amd `notify_dispatch`  tools
-        - firelink-kafka: broker (depends on zookeeper) with 3 topics (firelink.fire, firelink.weather, firelink.recommendations)
-        - firelink-zookeeper: kafka coordinator
-    - FastAPI breakdown (see `localhost:8000/docs` for endpoint docs)
+        1. firelink-backend: FastAPI server (port 8000) - CRUD + Help Agent + context
+        2. firelink-recommendation-agent: uses OpenAI `gpt-4o-mini` to emit a summarized advisory every minute (runs script `app.run_agent recommendation` )
+        3. firelink-calfire-producer: replays `fire_incidents.json` → Kafka every 10s (runs script `app.run_producer.py calfire` )
+        4. firelink-noaa-producer: replays `weather_alerts.json` → Kafka every 10s (runs script `app.run_producer.py noaa` )
+        5. firelink-mcp-server: uses `Dockerfile.mcp`  (port 8001), runs FastMCP server exposing `get_context` amd `notify_dispatch`  tools
+        6. firelink-kafka: broker (depends on zookeeper) with 3 topics (firelink.fire, firelink.weather, firelink.recommendations)
+        7. firelink-zookeeper: kafka coordinator
+
+    **FastAPI breakdown (see `localhost:8000/docs` for endpoint docs)**
         - **/health →** basic liveness check, returns `{status, service}`
         - **/community/{zip}** → calls `get_community` which essentially just loads, parses, and returns json from `data/community/...` which contains synthetic data on zip, stats, households (anonymous ids), events, and resources
         - **/context/latest →** calls `get_latest_context` which fetches last 10 messages per topic from Kafka to build live snapshot
@@ -21,8 +65,9 @@ Wildfire intelligence platform built as monorepo (backend + frontend in one) wit
         - **/weather-alerts/… →** located within `app/routes/weather_alerts.py` , same CRUD shape as fire-incidents, via `WeatherAlertRepository`
         - **/agents/recommendations/latest (`app/routes/agents/recommendation.py` ) →** calls `get_latest_recommendation` which reads the most recent message off the `firelink.recommendations` Kafka topic (published every 60s by the Recommendation Agent) and returns the `{advisory, reasoning, risk_level}` JSON, 404 if nothing's been published yet
         - **/sms/inbound →** calls `handle_sms` (from help agent) passing in user phone and message, returns an SMS-shaped reply; 503 if RAG/user data files are missing, 502 on agent failure
-    - Agents
-        - Base Agent (`services/agents/base_agent.py` ) → calls gpt-4o-mini, passes in context (JSON snapshot of latest fire incidents / weather conditions), and returns JSON. Also has connect_producer method which creates the kafka producer
+    
+    **Agents**
+        - Base Agent (`services/agents/base_agent.py`) → calls gpt-4o-mini, passes in context (JSON snapshot of latest fire incidents / weather conditions), and returns JSON. Also has connect_producer method which creates the kafka producer
         - Help Agent (`services/agents/help_agent.py`) → single Claude (`claude-sonnet-4-6`) call which fuses 6 context sources into one SMS-style reply, always in the user's language:
             - User profile (`mock_users.json`, via `knowledge/rag_query.py`)
             - Live fire + weather context from Kafka (`context_service.get_latest_context`)
@@ -31,15 +76,18 @@ Wildfire intelligence platform built as monorepo (backend + frontend in one) wit
             - Open shelter list (`app/data/shelters.json`)
             - System prompt instructing calm, brief, 1–3 sentence plain-text replies
             - Exposes `notify_dispatch` as a Claude tool call — if the model detects active life-threatening danger it calls the tool instead of replying with text, which hits `services/dispatch_service.py` (mock 911 dispatch)
-        - Recommendation Agent → subclasses BaseAgent, calling `get_latest_context` (from Kafka weather/fire topics), passing to LLM, and passing the JSON recommendation to the Kafka firelink.recommendations topic every **60s**
-    - Knowledge / RAG (`services/knowledge/`)
+        - Recommendation Agent (`services/agents/recommendation_agent.py) → subclasses BaseAgent, calling `get_latest_context` (from Kafka weather/fire topics), passing to LLM, and passing the JSON recommendation to the Kafka firelink.recommendations topic every **60s**
+    
+    **Knowledge / RAG (`services/knowledge`)
         - `ingest.py` → chunks and embeds source docs (see `backend/docs/comprehensive_guide.pdf`, `redcross-wildfire-checklist.pdf`) into Pinecone
         - `rag_query.py` → loads mock user profiles and retrieves top-K relevant chunks from Pinecone for the Help Agent's prompt
-    - MCP Server:
+   
+    **MCP Server**
         - exposes `get_context` and `notify_dispatch` as MCP tools (streamable http on port 8001) so external client can pull context
         - Uses FastMCP
         - Note when running locally, we use stdio (since everything runs on same machine). HTTP+SSE is considered legacy now. **Streamable HTTP** is the new standard. See these [docs](https://gofastmcp.com/v2/clients/transports) for more info.
-- Frontend (Next.js, App Router + TypeScript + Tailwind)
+
+### Frontend (Next.js, App Router + TypeScript + Tailwind)
     - Runs on port 3000 (`npm run dev`)
     - Two top-level routes:
         - `/` → static marketing/landing page, links into the demo dashboard (`/dashboard/91001`)
